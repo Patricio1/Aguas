@@ -39,9 +39,41 @@
     <link rel="stylesheet" href="datatable/css/dataTables.bootstrapCP.css">
     <script src="popper.js/dist/umd/popper.min.js"></script>
 
+    <link rel="stylesheet" href="bootstrapValidator/bootstrapValidator.min.css">
     
    
-    
+    <style>
+      
+       .kv-file-zoom {
+   display:none;
+}
+.has-error .help-block {
+  color: #e53935;
+  padding-left: 5px;
+}
+
+.form-control-feedback{
+    float: right;
+    margin-top: -30px;
+    padding-right: 5px;
+}
+
+
+.la-times{
+    color:#e53935;
+}
+.la-check{
+    color:#3c763d;
+}
+
+input[type="text"].form-control::-webkit-input-placeholder {
+  color:#bdbdbd;
+}
+
+.item-menu {
+    padding:0px 15px 0px 15px;
+}
+       </style>
       <!-- <script src="theme-assets/js/core/libraries/bootstrap.min.js"></script> -->
     
     <!-- END Page Level CSS-->
@@ -214,6 +246,7 @@
     
     <script src="datatable/js/buttons.colVis.min.js"></script>
 
+    <script src="bootstrapValidator/bootstrapValidator.min.js"></script>
     <script src="js/app.js"></script>
 
    

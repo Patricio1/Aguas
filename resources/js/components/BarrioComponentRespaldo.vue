@@ -12,23 +12,13 @@
         </button>
       </div>
       <div class="modal-body"> <br>                    
-        <form class="form-horizontal" id="formBarrio">
-          <div class="row">
-            <div class="col-sm-12">
-              <div class="form-group row">
-                <label for="ID_BARRIO" class="col-sm-3 text-right control-label col-form-label">Identificador</label>
-                <div class="col-sm-9">
-                  <input type="text" class="form-control" ref="ID_BARRIO" id="ID_BARRIO" name="ID_BARRIO" v-model="ID_BARRIO" placeholder="Identificador" >
-                </div>
-              </div>
-            </div>
-          </div>
+        <form class="form-horizontal">
           <div class="row">
             <div class="col-sm-12">
               <div class="form-group row">
                 <label for="NOMBRE_BARRIO" class="col-sm-3 text-right control-label col-form-label">Nombre</label>
                 <div class="col-sm-9">
-                  <input type="text" class="form-control" id="NOMBRE_BARRIO" name="NOMBRE_BARRIO" v-model="NOMBRE_BARRIO" placeholder="Nombre" >
+                  <input type="text" class="form-control" ref="NOMBRE_BARRIO" id="NOMBRE_BARRIO" name="NOMBRE_BARRIO" v-model="NOMBRE_BARRIO" placeholder="Nombre" >
                 </div>
               </div>
             </div>
@@ -36,15 +26,48 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button v-if="tipoAccion==1" type="button" @click="registrarBarrio()" class="btn btn-danger" ><span class="la la-floppy-o" style="color:#ffffff"></span>&nbsp;&nbsp;<strong>Guardar</strong></button>
-        <button v-if="tipoAccion==2" type="button" @click="actualizarBarrio()" class="btn btn-danger" ><span class="la la-floppy-o" style="color:#ffffff"></span>&nbsp;&nbsp;<strong>Guardar A</strong></button>                      
+        <button type="button" class="btn btn-danger" ><span class="la la-floppy-o" style="color:#ffffff"></span>&nbsp;&nbsp;<strong>Guardar</strong></button>                      
         <button type="button" class="btn btn-dark" data-dismiss="modal"><span class="la la-close" style="color:#ffffff"></span>&nbsp;&nbsp;<strong>Cerrar</strong></button>
       </div>
     </div>
   </div>
 </div>
 
-<button type="button" id="agregarBarrio" data-toggle="modal" data-target="#barrioModal" class="btn btn-success btn-min-width mr-1 mb-1"><span class="la la-plus" style="color:#ffffff"></span> Nuevo Barrio</button>
+<div class="modal fade" id="pruebaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel1" style="display: none;" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header" style="background-color:#337ab7">
+                        <h4
+                          class="modal-title"
+                          id="exampleModalLabel1"
+                          style="color:#ffffff"
+                        >Esta es un prueba</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true" style="color:#ffffff">×</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        
+                      </div>
+                      <div class="modal-footer">
+                        
+                        <button type="button" class="btn btn-danger" >
+                          &nbsp;&nbsp;<strong>Opcion 1</strong>
+                        </button>
+                        <button type="button" class="btn grey btn-secondary">
+                          &nbsp;&nbsp;<strong>Opcion 2</strong>
+                        </button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">
+                          &nbsp;&nbsp;<strong>Cerrar</strong>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+  <button type="button" id="btnToastr"  @click="toastr()" class="btn btn-primary btn-min-width mr-1 mb-1">Toastr</button>
+  <button type="button" id="btnSweet" @click="sweetalert()" class="btn btn-warning btn-min-width mr-1 mb-1">Sweet Alert</button>
+  <button type="button" id="agregarBarrio" data-toggle="modal" data-target="#barrioModal" class="btn btn-success btn-min-width mr-1 mb-1">Modal</button>
 
 
             <div class="table-responsive">
@@ -97,18 +120,15 @@ export default
           cabeceras: ["#","Nombre","Acciones"],
           tablaBarrios : null,
           NOMBRE_BARRIO: '',
-          ID_BARRIO: '',
+          ID_BARRIO: 0,
           titulo: 'LISTADO DE BARRIOS',
-          tituloModal : '',
-          tipoAccion: 1
+          tipoAccion: 0
         }
     },
    mounted() 
    {
-  let me = this;
-  me.validarBarrio();
-
-  console.log('ID_BARRIO: '+me.ID_BARRIO);
+  
+  console.log('ID_BARRIO: '+this.ID_BARRIO);
    $("#pruebaModal").on("show.bs.modal", function() {
       $("#principal").css({ "padding-right": "0px" });
       $("#navegacion").css({ "padding-right": "0px" });
@@ -116,71 +136,23 @@ export default
    $("#barrioModal").on("show.bs.modal", function() {
       $("#principal").css({ "padding-right": "0px" });
       $("#navegacion").css({ "padding-right": "0px" });
-
-      $('.table').attr('style','width:100%');
-
-      
      // this.tituloModal = this.ID_BARRIO>0?'Editar información de Barrio':'Agregar nuevo barrio';
     });
 
-    $("#barrioModal").on("hidden.bs.modal", function() {
-      console.log("modal closed");
-      me.limpiarDatos();
-   
-    // $('#formBarrio').data('bootstrapValidator').resetForm();
-     // this.tituloModal = this.ID_BARRIO>0?'Editar información de Barrio':'Agregar nuevo barrio';
-    });
-//
 
-     me.iniciarTabla();
+     this.iniciarTabla();
       $('.table').attr('style','width:100%');
       //this.iniciarTabla();
-      $('#cmp').text(me.titulo);
+      $('#cmp').text(this.titulo);
      
 $('#agregarBarrio').click(function(){
-    me.tituloModal = 'Agregar nuevo barrio';
-    me.NOMBRE_BARRIO = '';
-    me.ID_BARRIO = '';
-    me.tipoAccion = 1;
-    me.limpiarDatos();
-    $('#formBarrio').data('bootstrapValidator').resetForm();
+$('#hTituloModal').text('Agregar nuevo barrio');
+$('#NOMBRE_BARRIO').val('');
 });
 
    },
    methods: 
    {
-     registrarBarrio()
-    {
-        var validator = $('#formBarrio').data('bootstrapValidator');
-        validator.validate();
-        if(validator.isValid())
-        {             
-        let me = this;
-        console.log('datos válidos');
-        axios.post('/barrios/crear',{
-        'id': me.ID_BARRIO,
-        'nombre': me.NOMBRE_BARRIO
-        }).then(function (response){
-            if(response.status==200)
-            {
-                console.log(response.data);
-                toastr.options.closeButton = true;
-                toastr.success("Barrio registrado correctamente!");
-                me.limpiarDatos();
-                me.tablaBarrios.ajax.reload();
-            }
-            else
-            {
-                toastr.error("No se ha podido registrar el barrio "+me.NOMBRE_BARRIO+"!", 'Error!')
-            }           
-        })
-        .catch(function (error) {
-            console.log(error);
-        toastr.error('No se ha podido guardar el registro.', 'Error!')
-        });
-
-        }
-    },
      toastr()
      {
        toastr.success('Have fun storming the castle!', 'Miracle Max Says');
@@ -213,34 +185,9 @@ $('#agregarBarrio').click(function(){
       })
 
      },
-    actualizarBarrio()
+    registrar()
     {
-      var validator = $('#formBarrio').data('bootstrapValidator');
-        validator.validate();
-        if(validator.isValid())
-        {             
-        let me = this;
-        axios.post('/barrios/actualizar',{
-        'id': me.ID_BARRIO,
-        'nombre': me.NOMBRE_BARRIO
-        }).then(function (response){
-            if(response.status==200)
-            {
-                toastr.options.closeButton = true;
-                toastr.success("Barrio actualizado correctamente!");
-                me.tablaBarrios.ajax.reload();
-            }
-            else
-            {
-                toastr.error("No se ha podido actualizar el barrio "+me.NOMBRE_BARRIO+"!", 'Error!')
-            }           
-        })
-        .catch(function (error) {
-            console.log(error);
-        toastr.error('No se ha podido guardar el registro.', 'Error!')
-        });
 
-        }
     },
     iniciarTabla() {
       this.tablaBarrios = $("#tabla-barrios").DataTable({
@@ -368,60 +315,11 @@ $('#agregarBarrio').click(function(){
         var data = me.tablaBarrios.row( $(this).parents('tr') ).data();
         //alert( data[0] +"'s salary is: "+ data);
         me.ID_BARRIO = data.ID_BARRIO;
-        me.NOMBRE_BARRIO = data.NOMBRE_BARRIO;
-        me.tituloModal = 'Editar información de Barrio';
-
-       
-        $("#formBarrio").data("bootstrapValidator").resetForm();
-        me.tipoAccion = 2;
-        
-      //  $('#hTituloModal').text('Editar información de Barrio');
+        me.NOMBRE_BARRIO = data.NOMBRE_BARRIO;;
+        $('#hTituloModal').text('Editar información de Barrio');
       });
 
-    },
-    limpiarDatos()
-    {
-        $('#formBarrio').data('bootstrapValidator').resetForm();   
-        let me = this;
-        me.$refs.ID_BARRIO.focus();
-        me.ID_BARRIO = '';
-        me.NOMBRE_BARRIO = '';
-    },
-    validarBarrio()
-    {
-      $("#formBarrio").bootstrapValidator({
-        message: "Este valor no es valido",
-        feedbackIcons: {
-          valid: "la la-check",
-          invalid: "la la-times",
-          validating: "la la-refresh"
-        },
-        fields: {
-          ID_BARRIO: {
-            validators: {
-              stringLength: {
-                max: 3,
-                message: "Por favor ingrese solo 3 caracteres"
-              },
-              notEmpty: {
-                message: "El identificador de barrio es requerido"
-              }
-            }
-          },
-          NOMBRE_BARRIO: {
-            validators: {
-              stringLength: {
-                max: 100,
-                message: "Por favor ingrese solo 100 caracteres"
-              },
-              notEmpty: {
-                message: "El nombre de barrio es requerido"
-              }
-            }
-          }
-        }
-      });
-    },
+    }
    }
 }
 </script>

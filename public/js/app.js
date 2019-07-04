@@ -1776,14 +1776,33 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
       cabeceras: ["#", "Nombre", "Acciones"],
-      tablaBarrios: null
+      tablaBarrios: null,
+      NOMBRE_BARRIO: '',
+      ID_BARRIO: '',
+      titulo: 'LISTADO DE BARRIOS',
+      tituloModal: '',
+      tipoAccion: 1
     };
   },
   mounted: function mounted() {
+    var me = this;
+    me.validarBarrio();
+    console.log('ID_BARRIO: ' + me.ID_BARRIO);
     $("#pruebaModal").on("show.bs.modal", function () {
       $("#principal").css({
         "padding-right": "0px"
@@ -1792,11 +1811,61 @@ __webpack_require__.r(__webpack_exports__);
         "padding-right": "0px"
       });
     });
-    this.iniciarTabla2(); //this.iniciarTabla();
+    $("#barrioModal").on("show.bs.modal", function () {
+      $("#principal").css({
+        "padding-right": "0px"
+      });
+      $("#navegacion").css({
+        "padding-right": "0px"
+      });
+      $('.table').attr('style', 'width:100%'); // this.tituloModal = this.ID_BARRIO>0?'Editar información de Barrio':'Agregar nuevo barrio';
+    });
+    $("#barrioModal").on("hidden.bs.modal", function () {
+      console.log("modal closed");
+      me.limpiarDatos(); // $('#formBarrio').data('bootstrapValidator').resetForm();
+      // this.tituloModal = this.ID_BARRIO>0?'Editar información de Barrio':'Agregar nuevo barrio';
+    }); //
 
-    $('#cmp').text("hola");
+    me.iniciarTabla();
+    $('.table').attr('style', 'width:100%'); //this.iniciarTabla();
+
+    $('#cmp').text(me.titulo);
+    $('#agregarBarrio').click(function () {
+      me.tituloModal = 'Agregar nuevo barrio';
+      me.NOMBRE_BARRIO = '';
+      me.ID_BARRIO = '';
+      me.tipoAccion = 1;
+      me.limpiarDatos();
+      $('#formBarrio').data('bootstrapValidator').resetForm();
+    });
   },
   methods: {
+    registrarBarrio: function registrarBarrio() {
+      var validator = $('#formBarrio').data('bootstrapValidator');
+      validator.validate();
+
+      if (validator.isValid()) {
+        var me = this;
+        console.log('datos válidos');
+        axios.post('/barrios/crear', {
+          'id': me.ID_BARRIO,
+          'nombre': me.NOMBRE_BARRIO
+        }).then(function (response) {
+          if (response.status == 200) {
+            console.log(response.data);
+            toastr.options.closeButton = true;
+            toastr.success("Barrio registrado correctamente!");
+            me.limpiarDatos();
+            me.tablaBarrios.ajax.reload();
+          } else {
+            toastr.error("No se ha podido registrar el barrio " + me.NOMBRE_BARRIO + "!", 'Error!');
+          }
+        })["catch"](function (error) {
+          console.log(error);
+          toastr.error('No se ha podido guardar el registro.', 'Error!');
+        });
+      }
+    },
     toastr: function (_toastr) {
       function toastr() {
         return _toastr.apply(this, arguments);
@@ -1827,12 +1896,61 @@ __webpack_require__.r(__webpack_exports__);
         }
       });
     },
-    registrar: function registrar() {},
-    iniciarTabla2: function iniciarTabla2() {
+    actualizarBarrio: function actualizarBarrio() {
+      var validator = $('#formBarrio').data('bootstrapValidator');
+      validator.validate();
+
+      if (validator.isValid()) {
+        var me = this;
+        axios.post('/barrios/actualizar', {
+          'id': me.ID_BARRIO,
+          'nombre': me.NOMBRE_BARRIO
+        }).then(function (response) {
+          if (response.status == 200) {
+            toastr.options.closeButton = true;
+            toastr.success("Barrio actualizado correctamente!");
+            me.tablaBarrios.ajax.reload();
+          } else {
+            toastr.error("No se ha podido actualizar el barrio " + me.NOMBRE_BARRIO + "!", 'Error!');
+          }
+        })["catch"](function (error) {
+          console.log(error);
+          toastr.error('No se ha podido guardar el registro.', 'Error!');
+        });
+      }
+    },
+    iniciarTabla: function iniciarTabla() {
       this.tablaBarrios = $("#tabla-barrios").DataTable({
         responsive: true,
-        dom: 'lBfrtip',
-        lengthMenu: [[10, 20, 50, -1], [10, 20, 50, "Todo"]],
+        ajax: {
+          type: "GET",
+          url: "barrios",
+          dataSrc: function dataSrc(json) {
+            var return_data = new Array();
+            var buttons = "";
+            var btn = "";
+            var lblEstado = "";
+
+            for (var i = 0; i < json.data.length; i++) {
+              // console.log(json.data[i]);
+              //   if (json.data[i].ESTADO_EQUIPO > 0) {
+              //     btn = '<button id="' +json.data[i].ID_EQUIPO +'" type="button" class="btn btn-danger desactivar-equipo"><span class="fa fa-trash"></span> Desactivar</button>';
+              //     lblEstado = '<span class="badge badge-success"><strong>Activo</strong></span>';
+              //   } else {
+              //     btn = '<button id="' + json.data[i].ID_EQUIPO + '" type="button" class="btn btn-success activar-equipo"><span class="fa fa-check" style="color:#ffffff"></span> Activar</button>';
+              //     lblEstado = '<span class="badge badge-danger"><strong>Inactivo</strong></span>';
+              //   }
+              //buttons = '<div  class="btn-group btn-group-sm">' +'<button id="edit-' +json.data[i].ID_EQUIPO +'" class="btn btn-primary editar-equipo"><span class="fas fa-pencil-alt"></span> Editar</button>' +btn+"</div>";
+              return_data.push({
+                ID_BARRIO: json.data[i].id,
+                NOMBRE_BARRIO: json.data[i].nombre,
+                ACCIONES: '<div class="btn-group btn-group-sm">' + '<button type="button" data-toggle="modal" data-target="#barrioModal" class="btn btn-info"><span class="la la-edit" style="color:#ffffff"></span> Editar</button>' + '</div>'
+              });
+            }
+
+            return return_data;
+          }
+        },
         buttons: [{
           extend: 'copyHtml5',
           text: '<i class="fa fa-files-o"></i> Copiar',
@@ -1872,64 +1990,8 @@ __webpack_require__.r(__webpack_exports__);
             columns: 'th:not(:last-child)'
           }
         }],
-        language: {
-          sProcessing: "Procesando...",
-          sLengthMenu: "Mostrar _MENU_ registros",
-          sZeroRecords: "No se encontraron resultados",
-          sEmptyTable: "Ningún dato disponible en esta tabla",
-          sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-          sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
-          sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
-          sInfoPostFix: "",
-          sSearch: "Buscar:",
-          sUrl: "",
-          sInfoThousands: ",",
-          sLoadingRecords: "Cargando...",
-          oPaginate: {
-            sFirst: "Primero",
-            sLast: "Último",
-            sNext: "Siguiente",
-            sPrevious: "Anterior"
-          },
-          oAria: {
-            sSortAscending: ": Activar para ordenar la columna de manera ascendente",
-            sSortDescending: ": Activar para ordenar la columna de manera descendente"
-          }
-        }
-      });
-    },
-    iniciarTabla: function iniciarTabla() {
-      this.tablaBarrios = $("#tabla-barrios").DataTable({
-        ajax: {
-          type: "GET",
-          url: "barrios",
-          dataSrc: function dataSrc(json) {
-            var return_data = new Array();
-            var buttons = "";
-            var btn = "";
-            var lblEstado = "";
-
-            for (var i = 0; i < json.data.length; i++) {
-              console.log(json.data[i]); //   if (json.data[i].ESTADO_EQUIPO > 0) {
-              //     btn = '<button id="' +json.data[i].ID_EQUIPO +'" type="button" class="btn btn-danger desactivar-equipo"><span class="fa fa-trash"></span> Desactivar</button>';
-              //     lblEstado = '<span class="badge badge-success"><strong>Activo</strong></span>';
-              //   } else {
-              //     btn = '<button id="' + json.data[i].ID_EQUIPO + '" type="button" class="btn btn-success activar-equipo"><span class="fa fa-check" style="color:#ffffff"></span> Activar</button>';
-              //     lblEstado = '<span class="badge badge-danger"><strong>Inactivo</strong></span>';
-              //   }
-              //buttons = '<div  class="btn-group btn-group-sm">' +'<button id="edit-' +json.data[i].ID_EQUIPO +'" class="btn btn-primary editar-equipo"><span class="fas fa-pencil-alt"></span> Editar</button>' +btn+"</div>";
-
-              return_data.push({
-                ID_BARRIO: json.data[i].id,
-                NOMBRE_BARRIO: json.data[i].nombre,
-                ACCIONES: 'nada'
-              });
-            }
-
-            return return_data;
-          }
-        },
-        order: [[0, "asc"]],
+        // order: [[0, "asc"]],
+        dom: 'lBfrtip',
         columns: [{
           data: "ID_BARRIO"
         }, {
@@ -1960,6 +2022,57 @@ __webpack_require__.r(__webpack_exports__);
           oAria: {
             sSortAscending: ": Activar para ordenar la columna de manera ascendente",
             sSortDescending: ": Activar para ordenar la columna de manera descendente"
+          }
+        }
+      });
+      var me = this;
+      $('#tabla-barrios tbody').on('click', 'button', function () {
+        var data = me.tablaBarrios.row($(this).parents('tr')).data(); //alert( data[0] +"'s salary is: "+ data);
+
+        me.ID_BARRIO = data.ID_BARRIO;
+        me.NOMBRE_BARRIO = data.NOMBRE_BARRIO;
+        me.tituloModal = 'Editar información de Barrio';
+        $("#formBarrio").data("bootstrapValidator").resetForm();
+        me.tipoAccion = 2; //  $('#hTituloModal').text('Editar información de Barrio');
+      });
+    },
+    limpiarDatos: function limpiarDatos() {
+      $('#formBarrio').data('bootstrapValidator').resetForm();
+      var me = this;
+      me.$refs.ID_BARRIO.focus();
+      me.ID_BARRIO = '';
+      me.NOMBRE_BARRIO = '';
+    },
+    validarBarrio: function validarBarrio() {
+      $("#formBarrio").bootstrapValidator({
+        message: "Este valor no es valido",
+        feedbackIcons: {
+          valid: "la la-check",
+          invalid: "la la-times",
+          validating: "la la-refresh"
+        },
+        fields: {
+          ID_BARRIO: {
+            validators: {
+              stringLength: {
+                max: 3,
+                message: "Por favor ingrese solo 3 caracteres"
+              },
+              notEmpty: {
+                message: "El identificador de barrio es requerido"
+              }
+            }
+          },
+          NOMBRE_BARRIO: {
+            validators: {
+              stringLength: {
+                max: 100,
+                message: "Por favor ingrese solo 100 caracteres"
+              },
+              notEmpty: {
+                message: "El nombre de barrio es requerido"
+              }
+            }
           }
         }
       });
@@ -51420,50 +51533,223 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "row" }, [
     _c("div", { staticClass: "col-lg-12" }, [
-      _vm._m(0),
-      _vm._v(" "),
       _c(
-        "button",
+        "div",
         {
-          staticClass: "btn btn-primary btn-min-width mr-1 mb-1",
-          attrs: { type: "button", id: "btnToastr" },
-          on: {
-            click: function($event) {
-              return _vm.toastr()
-            }
-          }
-        },
-        [_vm._v("Toastr")]
-      ),
-      _vm._v(" "),
-      _c(
-        "button",
-        {
-          staticClass: "btn btn-warning btn-min-width mr-1 mb-1",
-          attrs: { type: "button", id: "btnSweet" },
-          on: {
-            click: function($event) {
-              return _vm.sweetalert()
-            }
-          }
-        },
-        [_vm._v("Sweet Alert")]
-      ),
-      _vm._v(" "),
-      _c(
-        "button",
-        {
-          staticClass: "btn btn-success btn-min-width mr-1 mb-1",
+          staticClass: "modal fade",
+          staticStyle: { display: "none" },
           attrs: {
-            type: "button",
-            "data-toggle": "modal",
-            "data-target": "#pruebaModal"
+            id: "barrioModal",
+            tabindex: "-1",
+            role: "dialog",
+            "aria-labelledby": "exampleModalLabel1",
+            "aria-hidden": "true"
           }
         },
-        [_vm._v("Modal")]
+        [
+          _c(
+            "div",
+            {
+              staticClass: "modal-dialog modal-dialog-centered",
+              attrs: { role: "document" }
+            },
+            [
+              _c("div", { staticClass: "modal-content" }, [
+                _c(
+                  "div",
+                  {
+                    staticClass: "modal-header",
+                    staticStyle: { "background-color": "#337ab7" }
+                  },
+                  [
+                    _c(
+                      "h4",
+                      {
+                        staticClass: "modal-title",
+                        staticStyle: { color: "#ffffff" },
+                        attrs: { id: "hTituloModal" }
+                      },
+                      [_vm._v(_vm._s(_vm.tituloModal))]
+                    ),
+                    _vm._v(" "),
+                    _vm._m(0)
+                  ]
+                ),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body" }, [
+                  _c("br"),
+                  _vm._v(" "),
+                  _c(
+                    "form",
+                    {
+                      staticClass: "form-horizontal",
+                      attrs: { id: "formBarrio" }
+                    },
+                    [
+                      _c("div", { staticClass: "row" }, [
+                        _c("div", { staticClass: "col-sm-12" }, [
+                          _c("div", { staticClass: "form-group row" }, [
+                            _c(
+                              "label",
+                              {
+                                staticClass:
+                                  "col-sm-3 text-right control-label col-form-label",
+                                attrs: { for: "ID_BARRIO" }
+                              },
+                              [_vm._v("Identificador")]
+                            ),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-9" }, [
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.ID_BARRIO,
+                                    expression: "ID_BARRIO"
+                                  }
+                                ],
+                                ref: "ID_BARRIO",
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  id: "ID_BARRIO",
+                                  name: "ID_BARRIO",
+                                  placeholder: "Identificador"
+                                },
+                                domProps: { value: _vm.ID_BARRIO },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.ID_BARRIO = $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ])
+                        ])
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "row" }, [
+                        _c("div", { staticClass: "col-sm-12" }, [
+                          _c("div", { staticClass: "form-group row" }, [
+                            _c(
+                              "label",
+                              {
+                                staticClass:
+                                  "col-sm-3 text-right control-label col-form-label",
+                                attrs: { for: "NOMBRE_BARRIO" }
+                              },
+                              [_vm._v("Nombre")]
+                            ),
+                            _vm._v(" "),
+                            _c("div", { staticClass: "col-sm-9" }, [
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.NOMBRE_BARRIO,
+                                    expression: "NOMBRE_BARRIO"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  id: "NOMBRE_BARRIO",
+                                  name: "NOMBRE_BARRIO",
+                                  placeholder: "Nombre"
+                                },
+                                domProps: { value: _vm.NOMBRE_BARRIO },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.NOMBRE_BARRIO = $event.target.value
+                                  }
+                                }
+                              })
+                            ])
+                          ])
+                        ])
+                      ])
+                    ]
+                  )
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-footer" }, [
+                  _vm.tipoAccion == 1
+                    ? _c(
+                        "button",
+                        {
+                          staticClass: "btn btn-danger",
+                          attrs: { type: "button" },
+                          on: {
+                            click: function($event) {
+                              return _vm.registrarBarrio()
+                            }
+                          }
+                        },
+                        [
+                          _c("span", {
+                            staticClass: "la la-floppy-o",
+                            staticStyle: { color: "#ffffff" }
+                          }),
+                          _vm._v("  "),
+                          _c("strong", [_vm._v("Guardar")])
+                        ]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.tipoAccion == 2
+                    ? _c(
+                        "button",
+                        {
+                          staticClass: "btn btn-danger",
+                          attrs: { type: "button" },
+                          on: {
+                            click: function($event) {
+                              return _vm.actualizarBarrio()
+                            }
+                          }
+                        },
+                        [
+                          _c("span", {
+                            staticClass: "la la-floppy-o",
+                            staticStyle: { color: "#ffffff" }
+                          }),
+                          _vm._v("  "),
+                          _c("strong", [_vm._v("Guardar A")])
+                        ]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm._m(1)
+                ])
+              ])
+            ]
+          )
+        ]
       ),
       _vm._v(" "),
-      _vm._m(1)
+      _vm._m(2),
+      _vm._v(" "),
+      _c("div", { staticClass: "table-responsive" }, [
+        _c("table", { staticClass: "table", attrs: { id: "tabla-barrios" } }, [
+          _c("thead", [
+            _c(
+              "tr",
+              _vm._l(_vm.cabeceras, function(cabecera) {
+                return _c("th", { key: cabecera }, [_vm._v(_vm._s(cabecera))])
+              }),
+              0
+            )
+          ])
+        ])
+      ])
     ])
   ])
 }
@@ -51473,106 +51759,23 @@ var staticRenderFns = [
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
     return _c(
-      "div",
+      "button",
       {
-        staticClass: "modal fade",
-        staticStyle: { display: "none" },
+        staticClass: "close",
         attrs: {
-          id: "pruebaModal",
-          tabindex: "-1",
-          role: "dialog",
-          "aria-labelledby": "exampleModalLabel1",
-          "aria-hidden": "true"
+          type: "button",
+          "data-dismiss": "modal",
+          "aria-label": "Close"
         }
       },
       [
         _c(
-          "div",
+          "span",
           {
-            staticClass: "modal-dialog modal-dialog-centered",
-            attrs: { role: "document" }
+            staticStyle: { color: "#ffffff" },
+            attrs: { "aria-hidden": "true" }
           },
-          [
-            _c("div", { staticClass: "modal-content" }, [
-              _c(
-                "div",
-                {
-                  staticClass: "modal-header",
-                  staticStyle: { "background-color": "#337ab7" }
-                },
-                [
-                  _c(
-                    "h4",
-                    {
-                      staticClass: "modal-title",
-                      staticStyle: { color: "#ffffff" },
-                      attrs: { id: "exampleModalLabel1" }
-                    },
-                    [_vm._v("Esta es un prueba")]
-                  ),
-                  _vm._v(" "),
-                  _c(
-                    "button",
-                    {
-                      staticClass: "close",
-                      attrs: {
-                        type: "button",
-                        "data-dismiss": "modal",
-                        "aria-label": "Close"
-                      }
-                    },
-                    [
-                      _c(
-                        "span",
-                        {
-                          staticStyle: { color: "#ffffff" },
-                          attrs: { "aria-hidden": "true" }
-                        },
-                        [_vm._v("×")]
-                      )
-                    ]
-                  )
-                ]
-              ),
-              _vm._v(" "),
-              _c("div", { staticClass: "modal-body" }),
-              _vm._v(" "),
-              _c("div", { staticClass: "modal-footer" }, [
-                _c(
-                  "button",
-                  { staticClass: "btn btn-danger", attrs: { type: "button" } },
-                  [
-                    _vm._v("\n                            "),
-                    _c("strong", [_vm._v("Opcion 1")])
-                  ]
-                ),
-                _vm._v(" "),
-                _c(
-                  "button",
-                  {
-                    staticClass: "btn grey btn-secondary",
-                    attrs: { type: "button" }
-                  },
-                  [
-                    _vm._v("\n                            "),
-                    _c("strong", [_vm._v("Opcion 2")])
-                  ]
-                ),
-                _vm._v(" "),
-                _c(
-                  "button",
-                  {
-                    staticClass: "btn btn-default",
-                    attrs: { type: "button", "data-dismiss": "modal" }
-                  },
-                  [
-                    _vm._v("\n                            "),
-                    _c("strong", [_vm._v("Cerrar")])
-                  ]
-                )
-              ])
-            ])
-          ]
+          [_vm._v("×")]
         )
       ]
     )
@@ -51581,53 +51784,45 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "table-responsive" }, [
-      _c("table", { staticClass: "table", attrs: { id: "tabla-barrios" } }, [
-        _c("thead", [
-          _c("tr", [
-            _c("th", [_vm._v("#")]),
-            _vm._v(" "),
-            _c("th", [_vm._v("First Name")]),
-            _vm._v(" "),
-            _c("th", [_vm._v("Last Name")]),
-            _vm._v(" "),
-            _c("th", [_vm._v("Username")])
-          ])
-        ]),
-        _vm._v(" "),
-        _c("tbody", [
-          _c("tr", [
-            _c("th", { attrs: { scope: "row" } }, [_vm._v("1")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("Mark")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("Otto")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("@mdo")])
-          ]),
-          _vm._v(" "),
-          _c("tr", [
-            _c("th", { attrs: { scope: "row" } }, [_vm._v("2")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("Jacob")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("Thornton")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("@fat")])
-          ]),
-          _vm._v(" "),
-          _c("tr", [
-            _c("th", { attrs: { scope: "row" } }, [_vm._v("3")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("Larry")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("the Bird")]),
-            _vm._v(" "),
-            _c("td", [_vm._v("@twitter")])
-          ])
-        ])
-      ])
-    ])
+    return _c(
+      "button",
+      {
+        staticClass: "btn btn-dark",
+        attrs: { type: "button", "data-dismiss": "modal" }
+      },
+      [
+        _c("span", {
+          staticClass: "la la-close",
+          staticStyle: { color: "#ffffff" }
+        }),
+        _vm._v("  "),
+        _c("strong", [_vm._v("Cerrar")])
+      ]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      {
+        staticClass: "btn btn-success btn-min-width mr-1 mb-1",
+        attrs: {
+          type: "button",
+          id: "agregarBarrio",
+          "data-toggle": "modal",
+          "data-target": "#barrioModal"
+        }
+      },
+      [
+        _c("span", {
+          staticClass: "la la-plus",
+          staticStyle: { color: "#ffffff" }
+        }),
+        _vm._v(" Nuevo Barrio")
+      ]
+    )
   }
 ]
 render._withStripped = true
@@ -64081,15 +64276,27 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./resources/sass/toastr.scss":
+/*!************************************!*\
+  !*** ./resources/sass/toastr.scss ***!
+  \************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
 /***/ 0:
-/*!*************************************************************!*\
-  !*** multi ./resources/js/app.js ./resources/sass/app.scss ***!
-  \*************************************************************/
+/*!******************************************************************************************!*\
+  !*** multi ./resources/js/app.js ./resources/sass/app.scss ./resources/sass/toastr.scss ***!
+  \******************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(/*! /home/patricio/Documentos/proyectoAguas/agua/resources/js/app.js */"./resources/js/app.js");
-module.exports = __webpack_require__(/*! /home/patricio/Documentos/proyectoAguas/agua/resources/sass/app.scss */"./resources/sass/app.scss");
+__webpack_require__(/*! /home/patricio/Documentos/proyectoAguas/agua/resources/sass/app.scss */"./resources/sass/app.scss");
+module.exports = __webpack_require__(/*! /home/patricio/Documentos/proyectoAguas/agua/resources/sass/toastr.scss */"./resources/sass/toastr.scss");
 
 
 /***/ })

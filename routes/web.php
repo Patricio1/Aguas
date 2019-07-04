@@ -15,3 +15,5 @@ Route::get('/', function () {
     return view('contenido');
 });
 Route::get('barrios', 'BarriosController@index');
+Route::post('barrios/crear', 'BarriosController@store');
+Route::post('barrios/actualizar', 'BarriosController@update');

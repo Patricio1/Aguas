@@ -2,7 +2,7 @@
 
     @extends('principal')
     @section('contenido')
-  <h1>SECCIÓN DE CONTENIDO</h1>
+
   <barrio-component></barrio-component>
   <!-- <div class="modal fade" id="pruebaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel1" style="display: none;" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered" role="document">
